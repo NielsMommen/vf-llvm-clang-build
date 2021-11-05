@@ -16,11 +16,6 @@ jobs:
 
     name: Build - ${{ matrix.os }}
 
-    steps:
-      - name: Add vcvarsall to PATH
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
       - name: Download llvm-project source
         run: |
           cd ${{ runner.temp }}
@@ -34,7 +29,8 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: New-Item -Path ${{ runner.temp }} -Name "build" -ItemType "directory"
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Configure build - Windows
+        uses: ilammy/msvc-dev-cmd@v1
         if: ${{ matrix.os == 'windows-latest' }}
         with:
           arch: x86
