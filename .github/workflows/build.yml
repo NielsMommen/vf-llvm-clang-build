@@ -56,4 +56,4 @@ jobs:
         uses: actions/upload-artifact@v2.2.3
         with:
           name: llvm-clang_${{ matrix.os }}
-          path: ${{ runner.temp }}build//Release/*
+          path: ${{ runner.temp }}/build/Release/*
