@@ -42,7 +42,7 @@ jobs:
         run: |
           cd ${{ runner.temp }}/build
           mkdir Release
-          cmake ${{ env.COMMON_CMAKE_VARS }} ${{ runner.temp }}/llvm-project/llvm
+          cmake ${{ env.COMMON_CMAKE_VARS }} -DCMAKE_INSTALL_PREFIX=${{ runner.temp }}/build/Release ${{ runner.temp }}/llvm-project/llvm
           cmake --build . --target install --config Release
 
       - name: Build - Windows
