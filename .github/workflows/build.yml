@@ -30,8 +30,14 @@ jobs:
         if: ${{ matrix.os != 'windows-latest' }}
         run: mkdir ${{ runner.temp }}/build
         
-      - if: ${{ matrix.os == 'windows-latest' }}
+      - name: Create build directory - Windows
+        if: ${{ matrix.os == 'windows-latest' }}
         run: New-Item -Path ${{ runner.temp }} -Name "build" -ItemType "directory"
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ matrix.os == 'windows-latest' }}
+        with:
+          arch: x86
 
       - name: Build - Unix
         if: ${{ matrix.os != 'windows-latest' }}
@@ -45,7 +51,6 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           cd ${{ runner.temp }}/build
-          vcvarsall.bat x86
           cmake ${{ env.COMMON_CMAKE_VARS }} -DLLVM_TARGETS_TO_BUILD=X86 -G "Visual Studio 16 2019" -A Win32 -Thost=x64 ${{ runner.temp }}/llvm-project/llvm
           msbuild ${{ runner.temp }}/build/tools/clang/clang-libraries.vcxproj -p:Configuration=Release -p:Platform=Win32 -m
 
