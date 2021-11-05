@@ -1,0 +1,60 @@
+name: LLVM/Clang build
+
+on: push
+
+env:
+  LLVM_VERSION: ${{ 13.0.0 }}
+  COMMON_CMAKE_VARS: ${{ '-DLLVM_ENABLE_PROJECTS=clang -DLLVM_BUILD_TOOLS=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DLLVM_BUILD_LLVM_DYLIB=OFF -DLLVM_ENABLE_BINDINGS=OFF -DLLVM_ENABLE_FFI=OFF -DLLVM_ENABLE_ZLIB=OFF -DLLVM_ENABLE_TERMINFO=OFF' }}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs_on: ${{ matrix.os }}
+
+    name: Build - ${{ matrix.os }}
+
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 1024
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+
+      - name: Add vcvarsall to PATH
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Download llvm-project source
+        run: git clone --depth 1 --branch llvmorg-${{ env.LLVM_VERISON }} https://github.com/llvm/llvm-project ${{ runner.temp }}
+
+      - name: Create build directory
+        run: mkdir ${{ runner.temp }}/build
+        shell: bash
+
+      - name: Build - Unix
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          cd ${{ runner.temp }}/build
+          mkdir Release
+          cmake ${{ env.COMMON_CMAKE_VARS }} ${{ runner.temp }}/llvm-project/llvm
+          cmake --build . --target install --config Release
+
+      - name: Build - Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          cd ${{ runner.temp }}/build
+          vcvarsall.bat x86
+          cmake ${{ env.COMMON_CMAKE_VARS }} -DLLVM_TARGETS_TO_BUILD=X86 -G "Visual Studio 16 2019" -A Win32 -Thost=x64 ${{ runner.temp }}/llvm-project/llvm
+          msbuild ${{ runner.temp }}/build/tools/clang/clang-libraries.vcxproj -p:Configuration=Release -p:Platform=Win32 -m
+
+      - name: upload Package
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: llvm-clang_${{ matrix.os }}
+          path: ${{ runner.temp }}build//Release/*
