@@ -102,9 +102,9 @@ jobs:
       - uses: cygwin/cygwin-install-action@master
         with:
           packages:
-            - mingw64-x86_64-gcc-g++
-            - cmake
-            - ninja
+            mingw64-x86_64-gcc-g++
+            cmake
+            ninja
       - name: Build
         run: |
           cd ${{ runner.temp }}/build
