@@ -95,7 +95,7 @@ jobs:
         run: |
           cd ${{ runner.temp }}
           git clone --depth 1 --branch llvmorg-${{ env.LLVM_VERSION }} https://github.com/llvm/llvm-project
-      - name: Create build/installation directory - Windows
+      - name: Create build/installation directory
         run: |
           New-Item -Path ${{ runner.temp }} -Name "build" -ItemType "directory"
           New-Item -Path ${{ runner.temp }} -Name "${{ env.PACKAGE_NAME }}" -ItemType "directory"
@@ -107,14 +107,14 @@ jobs:
             ninja
       - name: Build
         run: |
-          cd ${{ runner.temp }}/build
+          cd "$(cygdrive ${{ runner.temp }}/build)"
           mkdir Release
-          cmake -G Ninja ${{ env.COMMON_CMAKE_VARS }} -DCMAKE_INSTALL_PREFIX=${{ runner.temp }}/${{ env.PACKAGE_NAME }} -DLLVM_TARGETS_TO_BUILD=X86 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ ${{ runner.temp }}/llvm-project/llvm
+          cmake -G Ninja ${{ env.COMMON_CMAKE_VARS }} -DCMAKE_INSTALL_PREFIX=${{ runner.temp }}/${{ env.PACKAGE_NAME }} -DLLVM_TARGETS_TO_BUILD=X86 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=i686-w64-mingw32-gcc -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ "$(cygdrive ${{ runner.temp }}/llvm-project/llvm)"
           cmake --build . --target install --config Release
         shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - name: Create build tarball
         run: |
-          cd ${{ runner.temp }}
+          cd "$(cygdrive ${{ runner.temp }})"
           tar -cvzf ${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz ${{ env.PACKAGE_NAME }}
         shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - name: Produce shasum 256
@@ -159,7 +159,7 @@ jobs:
       - uses: cygwin/cygwin-install-action@master
       - name: Create build tarball
         run: |
-          cd ${{ runner.temp }}
+          cd "$(cygdrive ${{ runner.temp }})"
           tar -cvzf ${{ env.PACKAGE_NAME }}-${{ runner.os }}-{{ matrix.arch }}.tar.gz ${{ env.PACKAGE_NAME }}
         shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - name: Produce shasum 256
