@@ -104,6 +104,7 @@ jobs:
           packages:
             git
             gcc-g++
+            python3
             mingw64-x86_64-gcc-g++
             cmake
             ninja
