@@ -7,6 +7,9 @@ env:
   COMMON_CMAKE_VARS: ${{ '-DLLVM_ENABLE_PROJECTS=clang -DLLVM_BUILD_TOOLS=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DLLVM_BUILD_LLVM_DYLIB=OFF -DLLVM_ENABLE_BINDINGS=OFF -DLLVM_ENABLE_FFI=OFF -DLLVM_ENABLE_ZLIB=OFF -DLLVM_ENABLE_LIBXML2=OFF -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ZSTD=OFF -DLLVM_TARGETS_TO_BUILD=X86' }}
   SHASUM_FILE: 'sha256.txt'
 
+permissions:
+  id-token: write
+
 jobs:
   MacOS:
     runs-on: macos-11
@@ -38,11 +41,18 @@ jobs:
       - name: Produce shasum 256
         run: |
           shasum -a 256 ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz > ${{ runner.temp }}/${{ env.SHASUM_FILE }}
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.0.2
+      - name: Sign artifact
+        run: |
+          cd ${{ runner.temp }}
+          cosign sign-blob -y ${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz --bundle ${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz.signature
       - uses: actions/upload-artifact@v3.1.2
         with:
           name: vf-llvm-clang-${{ runner.os }}
           path: |
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz.signature
             ${{ runner.temp }}/${{ env.SHASUM_FILE }}
 
   Linux:
@@ -75,11 +85,18 @@ jobs:
       - name: Produce shasum 256
         run: |
           shasum -a 256 ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz > ${{ runner.temp }}/${{ env.SHASUM_FILE }}
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.0.2
+      - name: Sign artifact
+        run: |
+          cd ${{ runner.temp }}
+          cosign sign-blob -y ${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz --bundle ${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz.signature
       - uses: actions/upload-artifact@v3.1.2
         with:
           name: vf-llvm-clang-${{ runner.os }}
           path: |
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}.tar.gz.signature
             ${{ runner.temp }}/${{ env.SHASUM_FILE }}
 
   MinGW:
@@ -128,11 +145,18 @@ jobs:
       - name: Produce shasum 256
         run: |
           Get-FileHash -PATH "${{ runner.temp }}\${{ env.PACKAGE_NAME }}-${{ runner.os }}-MinGW-${{ matrix.cc_prefix }}.tar.gz" -Algorithm SHA256 | Out-File -FilePath ${{ runner.temp }}/${{ env.SHASUM_FILE }} -Encoding utf8
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.0.2
+      - name: Sign artifact
+        run: |
+          cd ${{ runner.temp }}
+          cosign sign-blob -y ${{ env.PACKAGE_NAME }}-${{ runner.os }}-MinGW-${{ matrix.cc_prefix }}.tar.gz --bundle ${{ env.PACKAGE_NAME }}-${{ runner.os }}-MinGW-${{ matrix.cc_prefix }}.tar.gz.signature
       - uses: actions/upload-artifact@v3.1.2
         with:
           name: vf-llvm-clang-${{ runner.os }}-MinGW-${{ matrix.cc_prefix }}
           path: |
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}-MinGW-${{ matrix.cc_prefix }}.tar.gz
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}-MinGW-${{ matrix.cc_prefix }}.tar.gz.signature
             ${{ runner.temp }}/${{ env.SHASUM_FILE }}
 
   MSVC:
@@ -173,9 +197,16 @@ jobs:
       - name: Produce shasum 256
         run: |
           Get-FileHash -PATH "${{ runner.temp }}\${{ env.PACKAGE_NAME }}-${{ runner.os }}-MSVC-${{ matrix.arch }}.tar.gz" -Algorithm SHA256 | Out-File -FilePath ${{ runner.temp }}/${{ env.SHASUM_FILE }} -Encoding utf8
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.0.2
+      - name: Sign artifact
+        run: |
+          cd ${{ runner.temp }}
+          cosign sign-blob -y ${{ env.PACKAGE_NAME }}-${{ runner.os }}-MSVC-${{ matrix.arch }}.tar.gz --bundle ${{ env.PACKAGE_NAME }}-${{ runner.os }}-MSVC-${{ matrix.arch }}.tar.gz.signature
       - uses: actions/upload-artifact@v3.1.2
         with:
           name: vf-llvm-clang-${{ runner.os }}-MSVC-${{ matrix.arch }}
           path: |
             ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}-MSVC-${{ matrix.arch }}.tar.gz
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}-${{ runner.os }}-MSVC-${{ matrix.arch }}.tar.gz.signature
             ${{ runner.temp }}/${{ env.SHASUM_FILE }}
